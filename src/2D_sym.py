@@ -116,5 +116,6 @@ def method_iii(p_i: list) -> tuple[float, float, float]:
     raise
 
 # return 형식: Ax + By + C = 0에서 (A, B, C)
+# 디버깅안함
 if __name__ == "__main__":
     pass
