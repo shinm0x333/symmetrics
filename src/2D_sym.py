@@ -5,6 +5,7 @@ eps = 1e-5
 def _identical(a, b):
     if type(a) in [complex, float]:
             return abs(a-b) < eps
+    raise
 
 def _z_sym(z: complex, arg: float) -> complex:
     return cmath.exp(2j*arg) * z.conjugate()
