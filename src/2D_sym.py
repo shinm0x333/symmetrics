@@ -3,7 +3,7 @@ from functools import cmp_to_key
 
 eps = 1e-5
 def _identical(a, b):
-    if type(a) in [complex, float]:
+    if type(a) in [complex, float, int]:
             return abs(a-b) < eps
     raise
 
@@ -21,6 +21,7 @@ def method_i(p_i: list) -> tuple[float, float, float]:
     avg = sum(c_i)/len(c_i)
     for exp in 2, 3:
         var = sum((z-avg)**exp for z in c_i)
+        if _identical(var, 0): continue
         for n in range(exp):
             arg = (cmath.phase(var) + n*cmath.pi) / exp
             if _check(c_i, arg):
@@ -41,12 +42,12 @@ def _cross_cmp(a: complex, b: complex) -> int:
     if cross < 0: return 1
     return 0
 
-def _compress(l: list[tuple]) -> list[tuple]:
+def _compress(l: list[tuple], start_cnt: int = 0) -> list[tuple]:
     l.sort()
-    cnt = 0
-    ret = [(1, l[0][1])]
+    cnt = start_cnt
+    ret = [(start_cnt, l[0][1])]
     for i in range(1, len(l)):
-        if not _identical(l[i-1], l[i]):
+        if not _identical(l[i-1][0], l[i][0]):
             cnt += 1
         ret.append((cnt, l[i][1]))
     ret.sort(key=lambda x: x[1])
@@ -63,18 +64,24 @@ def _segment_palindromes(l: list[int], sz: int) -> list[int]:
         h = (h*B + l[i])%MOD
         if i >= sz:
             h = (h - l[i-sz]*DEL)%MOD
+        if i >= sz-1:
             orig.append(h)
+    h = 0
     rev = []
     for i in range(N-1, -1, -1):
         h = (h*B + l[i])%MOD
         if N-i-1 >= sz:
             h = (h - l[i+sz]*DEL)%MOD
+        if N-i-1 >= sz-1:
             rev.append(h)
     rev.reverse()
     return [i for i in range(N-sz+1) if orig[i] == rev[i]]
         
 def _line_eq(a: complex, b: complex) -> tuple[float, float, float]:
-    return a.imag-b.imag, b.real-a.real, a.real*b.imag - b.real*a.imag
+    return (a-b).imag, (b-a).real, a.real*b.imag - b.real*a.imag
+
+def _bisector_eq(a: complex, b: complex) -> tuple[float, float, float]:
+    return ((a-b).real, (a-b).imag, (abs(b)**2-abs(a)**2)/2)
 
 def method_ii(p_i: list) -> list[tuple[float, float, float]]:
     c1_i = [complex(*p) for p in p_i]
@@ -86,17 +93,20 @@ def method_ii(p_i: list) -> list[tuple[float, float, float]]:
     l2 = []
     for i in range(N):
         j = (i+1)%N
-        l2.append((cmath.phase(c_i[i])-cmath.phase(c_i[j]), i))
-    l1 = _compress(l1); l2 = _compress(l2)
+        l2.append(((cmath.phase(c_i[i])-cmath.phase(c_i[j])) % (2*math.pi), i))
+    l1 = _compress(l1)
+    l2 = _compress(l2, len(l1))
     l_star = [l2[i>>1][0] if i&1 else l1[i>>1][0] for i in range(2*N)] * 2
     l_star.pop(0); l_star.pop()
     seg = _segment_palindromes(l_star, 2*N-1)
     ret = []
     for s in seg:
-        if s&1:
-            ret.append(_line_eq(c, c+c_i[(s+1)>>1]))
-        i = s>>1; j = (i+1)%N
-        ret.append(_line_eq(c, c+(c_i[i]+c_i[j])/2))
+        m = s + N  
+        k = (m % (N*2)) // 2  
+        if m&1:
+            ret.append(_bisector_eq(c+c_i[k], c+c_i[(k+1)%N]))
+        else:
+            ret.append(_line_eq(c, c+c_i[k]))
     return ret
 
 def _get_c_in_radius(c_i: list[complex], r: float) -> complex:
@@ -110,13 +120,19 @@ def method_iii(p_i: list) -> tuple[float, float, float]:
     c_i = [z-c for z in c_i]
     r_i = [abs(z) for z in c_i]; r_i.sort()
     for dx in 0, -1, 1, -2, 2:
-        if not 0 <= N//2+dx < N: raise
-        c2 = _get_c_in_radius(c_i, r_i[N//2+dx])
+        if not 0 <= N//2+dx < N: continue
+        c2 = _get_c_in_radius(c_i, r_i[N//2+dx])+c
         if not _identical(c, c2):
             return _line_eq(c, c2)
     raise
 
-# return 형식: Ax + By + C = 0에서 (A, B, C)
-# 디버깅안함
+# TODO: 결과값 약분하기?
 if __name__ == "__main__":
-    pass
+    p_i = []
+    tc = int(input())
+    for _ in range(tc):
+        x, y = map(int, input().split())
+        p_i.append((x, y))
+    print(method_i(p_i))
+    print(method_ii(p_i))
+    print(method_iii(p_i))
