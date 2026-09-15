@@ -16,10 +16,10 @@ def _check(c_i: list[complex], arg: float) -> bool:
     c2_i.sort(key=lambda x: (x.real, x.imag))
     return all(_identical(c1, c2) for c1, c2 in zip(c_i, c2_i))
 
-def method_i(p_i: list) -> tuple[float, float, float]:
+def method_i(p_i: list, prec=2) -> tuple[float, float, float]:
     c_i = [complex(*p) for p in p_i]
     avg = sum(c_i)/len(c_i)
-    for exp in 2, 3:
+    for exp in range(2, 2+prec):
         var = sum((z-avg)**exp for z in c_i)
         if _identical(var, 0): continue
         for n in range(exp):
@@ -112,26 +112,27 @@ def _get_c_in_radius(c_i: list[complex], r: float) -> complex:
     circ = [z for z in c_i if abs(z) < r or _identical(abs(z), r)]
     return sum(circ)/len(circ)
 
-def method_iii(p_i: list) -> tuple[float, float, float]:
+def method_iii(p_i: list, prec=5) -> tuple[float, float, float]:
     N = len(p_i)
     c_i = [complex(*p) for p in p_i]
     c = sum(c_i)/N
     c_i = [z-c for z in c_i]
     r_i = [abs(z) for z in c_i]; r_i.sort()
-    for dx in 0, -1, 1, -2, 2:
+    for i in range(prec):
+        dx = (i+1)//2 * (-1 if i%2 else 1)
         if not 0 <= N//2+dx < N: continue
         c2 = _get_c_in_radius(c_i, r_i[N//2+dx])+c
         if not _identical(c, c2):
             return _line_eq(c, c2)
     raise
 
-# TODO: 약분하기?
+# TODO: 약분 및 mehtod2 lstar 모두안해도되는지?
 if __name__ == "__main__":
     p_i = []
     tc = int(input())
     for _ in range(tc):
         x, y = map(int, input().split())
         p_i.append((x, y))
-    print(method_i(p_i))
     print(method_ii(p_i))
+    print(method_i(p_i))
     print(method_iii(p_i))
