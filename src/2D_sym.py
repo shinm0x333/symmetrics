@@ -101,12 +101,11 @@ def method_ii(p_i: list) -> list[tuple[float, float, float]]:
     seg = _segment_palindromes(l_star, 2*N-1)
     ret = []
     for s in seg:
-        m = s + N  
-        k = (m % (N*2)) // 2  
-        if m&1:
-            ret.append(_bisector_eq(c+c_i[k], c+c_i[(k+1)%N]))
+        if s&1:
+            i = s//2; j = (i+1)%N
+            ret.append(_bisector_eq(c+c_i[i], c+c_i[j]))
         else:
-            ret.append(_line_eq(c, c+c_i[k]))
+            ret.append(_line_eq(c, c+c_i[s//2]))
     return ret
 
 def _get_c_in_radius(c_i: list[complex], r: float) -> complex:
@@ -126,7 +125,7 @@ def method_iii(p_i: list) -> tuple[float, float, float]:
             return _line_eq(c, c2)
     raise
 
-# TODO: 결과값 약분하기?
+# TODO: 약분하기?
 if __name__ == "__main__":
     p_i = []
     tc = int(input())
