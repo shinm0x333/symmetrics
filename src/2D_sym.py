@@ -89,11 +89,22 @@ def method_ii(p_i: list) -> list[tuple[float, float, float]]:
     c1_i = [z-c for z in c1_i]
     c_i = [z for z in c1_i if not _identical(0, z)]; N = len(c_i)
     c_i.sort(key=cmp_to_key(_cross_cmp))
+    c_i2 = []; f = -1
+    for i in range(N):
+        c_i2.append(c_i[i])
+        if i < N-1 and _identical(cmath.phase(c_i[i+1]), cmath.phase(c_i[i])) and f == -1:
+            f = i
+        else:
+            if f != -1:
+                for j in range(i-1, f-1, -1):
+                    c_i2.append(c_i[j])
+                f = -1
+    c_i = c_i2; N = len(c_i)
     l1 = [(abs(c_i[i]), i) for i in range(N)]
     l2 = []
     for i in range(N):
         j = (i+1)%N
-        l2.append(((cmath.phase(c_i[i])-cmath.phase(c_i[j])) % (2*math.pi), i))
+        l2.append(((cmath.phase(c_i[j])-cmath.phase(c_i[i])) % (2*math.pi), i))
     l1 = _compress(l1)
     l2 = _compress(l2, len(l1))
     l_star = [l2[i>>1][0] if i&1 else l1[i>>1][0] for i in range(2*N)] * 2
@@ -126,7 +137,6 @@ def method_iii(p_i: list, prec=5) -> tuple[float, float, float]:
             return _line_eq(c, c2)
     raise
 
-# TODO: 약분 및 mehtod2 lstar 모두안해도되는지?
 if __name__ == "__main__":
     p_i = []
     tc = int(input())
